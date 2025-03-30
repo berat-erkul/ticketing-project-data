@@ -1,10 +1,7 @@
 package com.cydeo.mapper;
 
-
-import com.cydeo.converter.RoleDtoConverter;
 import com.cydeo.dto.RoleDTO;
 import com.cydeo.entity.Role;
-import com.cydeo.service.RoleService;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
 

@@ -16,5 +16,4 @@ public class TicketingProjectDataApplication {
     public ModelMapper maper(){
         return new ModelMapper();
     }
-
 }
