@@ -20,7 +20,7 @@ public class MapperUtil {
      * @param <T> the type of the converted object
      * @return the converted object
      */
-    public <T> T conver(Object objectToBeConverted, Class <T> convertedObject) {
+    public <T> T convert(Object objectToBeConverted, Class <T> convertedObject) {
         return modelMapper.map(objectToBeConverted, convertedObject);
     }
 }
