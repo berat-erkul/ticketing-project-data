@@ -3,7 +3,6 @@ package com.cydeo.service.impl;
 import com.cydeo.dto.RoleDTO;
 import com.cydeo.entity.Role;
 import com.cydeo.mapper.MapperUtil;
-import com.cydeo.mapper.RoleMapper;
 import com.cydeo.repository.RoleRepository;
 import com.cydeo.service.RoleService;
 import org.springframework.stereotype.Service;
@@ -19,7 +18,7 @@ public class RoleServiceImpl implements RoleService {
     private final MapperUtil mapperUtil;
 
 
-    public RoleServiceImpl(RoleRepository roleRepository, RoleMapper roleMapper, MapperUtil mapperUtil) {
+    public RoleServiceImpl(RoleRepository roleRepository, MapperUtil mapperUtil) {
         this.roleRepository = roleRepository;
         this.mapperUtil = mapperUtil;
     }
@@ -37,6 +36,7 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     public RoleDTO findById(Long id) {
-        return null;
+        // roleRepository.findById(id).get()   -> Role is Entity. We'll return RoleDTO
+        return mapperUtil.convert(roleRepository.findById(id).get(),RoleDTO.class);
     }
 }
