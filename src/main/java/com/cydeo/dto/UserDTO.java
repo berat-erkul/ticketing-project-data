@@ -2,13 +2,13 @@ package com.cydeo.dto;
 
 import com.cydeo.enums.Gender;
 import jakarta.validation.constraints.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
 public class UserDTO {
 
     // @NotBlank => field should not be null, "" or "  "
