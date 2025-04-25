@@ -1,5 +1,5 @@
 
-/*
+
 package com.cydeo.converter;
 
 import com.cydeo.dto.ProjectDTO;
@@ -18,7 +18,6 @@ public class ProjectDtoConverter implements Converter<String, ProjectDTO> { // P
 
     @Override
     public ProjectDTO convert(String source) {
-        return projectService.findById(source);
+        return projectService.getByProjectCode(source);
     }
 }
-*/

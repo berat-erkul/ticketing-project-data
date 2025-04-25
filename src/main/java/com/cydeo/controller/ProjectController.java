@@ -1,4 +1,3 @@
-/*
 
 package com.cydeo.controller;
 
@@ -28,8 +27,8 @@ public class ProjectController {
     public String createProject(Model model) {
 
         model.addAttribute("project", new ProjectDTO());
-        model.addAttribute("projects", projectService.findAll());
-        model.addAttribute("managers", userService.findManagers());
+        model.addAttribute("projects", projectService.listAllProject());
+        model.addAttribute("managers", userService.listAllByRole());
 
         return "project/create";
     }
@@ -40,8 +39,8 @@ public class ProjectController {
 
         if (bindingResult.hasErrors()) {
 
-            model.addAttribute("managers", userService.findManagers());
-            model.addAttribute("projects", projectService.findAll());
+            model.addAttribute("managers", userService.listAllByRole("manager"));
+            model.addAttribute("projects", projectService.listAllProject());
 
             return "/project/create";
         }
@@ -54,9 +53,9 @@ public class ProjectController {
     @GetMapping("/update/{projectCode}")
     public String editProject(@PathVariable("projectCode") String projectCode, Model model) {
 
-        model.addAttribute("project", projectService.findById(projectCode));
-        model.addAttribute("projects", projectService.findAll());
-        model.addAttribute("managers", userService.findManagers());
+        model.addAttribute("project", projectService.getByProjectCode(projectCode));
+        model.addAttribute("projects", projectService.listAllProject());
+        model.addAttribute("managers", userService.listAllByRole("manager"));
 
         return "project/update";
     }
@@ -68,8 +67,8 @@ public class ProjectController {
 
         if (bindingResult.hasErrors()) {
 
-            model.addAttribute("managers", userService.findManagers());
-            model.addAttribute("projects", projectService.findAll());
+            model.addAttribute("managers", userService.listAllByRole("manager"));
+            model.addAttribute("projects", projectService.listAllProject());
 
             return "/project/update";
         }
@@ -116,4 +115,3 @@ public class ProjectController {
     }
 }
 
-*/
