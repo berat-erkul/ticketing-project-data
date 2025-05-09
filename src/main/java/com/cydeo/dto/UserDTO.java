@@ -11,6 +11,8 @@ import lombok.*;
 @Setter
 public class UserDTO {
 
+    private Long id;  //to fix "unsaved transient instance" error
+
     // @NotBlank => field should not be null, "" or "  "
     // @NotEmpty => field should not be null, "" or empty collection
     // @NotNull => field should not be null

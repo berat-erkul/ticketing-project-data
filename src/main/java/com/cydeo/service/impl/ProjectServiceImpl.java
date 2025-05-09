@@ -2,6 +2,7 @@ package com.cydeo.service.impl;
 
 import com.cydeo.dto.ProjectDTO;
 import com.cydeo.entity.Project;
+import com.cydeo.enums.Status;
 import com.cydeo.mapper.MapperUtil;
 import com.cydeo.repository.ProjectRepository;
 import com.cydeo.service.ProjectService;
@@ -24,7 +25,9 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public ProjectDTO getByProjectCode(String projectCode) {
-        return null;
+
+        Project project = projectRepository.findByProjectCode(projectCode);
+        return mapperUtil.convert(project, ProjectDTO.class);
     }
 
     @Override
@@ -36,16 +39,37 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public void save(ProjectDTO project) {
-
-    }
-
-    @Override
-    public void update(ProjectDTO project) {
-
+        project.setProjectStatus(Status.OPEN);
+        projectRepository.save(mapperUtil.convert(project,Project.class));
     }
 
     @Override
     public void delete(String projectCode) {
 
+        Project project = projectRepository.findByProjectCode(projectCode);
+        project.setIsDeleted(true);
+
+        //(optional)project code is unique, so I want to make this project code reusable
+        project.setProjectCode(project.getProjectCode() + "-" + project.getId());
+
+        projectRepository.save(project);
+    }
+
+
+    @Override
+    public void update(ProjectDTO project) {
+        Project foundProject = projectRepository.findByProjectCode(project.getProjectCode());
+        Project convertedProject = mapperUtil.convert(project, Project.class);
+        convertedProject.setId(foundProject.getId());
+        projectRepository.save(convertedProject);
+    }
+
+    @Override
+    public void complete(String projectCode) {
+
+        Project project = projectRepository.findByProjectCode(projectCode);
+        project.setProjectStatus(Status.COMPLETE);
+
+        projectRepository.save(project);
     }
 }
