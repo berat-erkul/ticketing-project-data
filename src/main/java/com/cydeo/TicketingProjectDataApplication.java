@@ -6,10 +6,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
 @SpringBootApplication
-public class TicketingProjectSecurityApplication {
+public class TicketingProjectDataApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(TicketingProjectSecurityApplication.class, args);
+        SpringApplication.run(TicketingProjectDataApplication.class, args);
     }
 
     @Bean
