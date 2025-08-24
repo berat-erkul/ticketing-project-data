@@ -2,20 +2,20 @@ package com.cydeo.dto;
 
 import com.cydeo.enums.Gender;
 import jakarta.validation.constraints.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter
-@Setter
 public class UserDTO {
-
-    private Long id;  //to fix "unsaved transient instance" error
 
     // @NotBlank => field should not be null, "" or "  "
     // @NotEmpty => field should not be null, "" or empty collection
     // @NotNull => field should not be null
+
+    private Long id;
 
     @NotBlank(message = "First Name is a required field")
     @Size(max = 15, min = 2, message = "First Name must be between 2 and 15 characters long")

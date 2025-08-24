@@ -14,14 +14,14 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @Entity
 @Table(name = "tasks")
-@Where(clause = "is_deleted = false")
-public class Task extends BaseEntity {
+@Where(clause = "is_deleted=false")
+public class Task extends BaseEntity{
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Project project;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "employee_id")   //!!!
+    @JoinColumn(name = "employee_id")
     private User assignedEmployee;
 
     private String taskSubject;
@@ -33,7 +33,6 @@ public class Task extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     private Status taskStatus;
-
 
 
 }

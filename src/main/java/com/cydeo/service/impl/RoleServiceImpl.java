@@ -10,13 +10,12 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
 
-
 @Service
 public class RoleServiceImpl implements RoleService {
 
     private final RoleRepository roleRepository;
+    //    private final RoleMapper roleMapper;
     private final MapperUtil mapperUtil;
-
 
     public RoleServiceImpl(RoleRepository roleRepository, MapperUtil mapperUtil) {
         this.roleRepository = roleRepository;
@@ -26,17 +25,18 @@ public class RoleServiceImpl implements RoleService {
     @Override
     public List<RoleDTO> listAllRoles() {
 
+        // ask repository layer to give us a list of roles from database
+
         List<Role> roleList = roleRepository.findAll();
 
-        //We can't return Role list we need to convert it to RoleDTO
-        //That's why we are using RoleMapper
-
-        return roleList.stream().map(role -> mapperUtil.convert(role,RoleDTO.class)).collect(Collectors.toList());
+        return roleList.stream().map(role -> mapperUtil.convert(role, RoleDTO.class)).collect(Collectors.toList());
     }
 
     @Override
     public RoleDTO findById(Long id) {
-        // roleRepository.findById(id).get()   -> Role is Entity. We'll return RoleDTO
-        return mapperUtil.convert(roleRepository.findById(id).get(),RoleDTO.class);
+
+        Role role = roleRepository.findById(id).get();
+
+        return mapperUtil.convert(role, RoleDTO.class);
     }
 }

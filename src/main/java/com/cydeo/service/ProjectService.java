@@ -1,19 +1,25 @@
 package com.cydeo.service;
 
 import com.cydeo.dto.ProjectDTO;
-import org.springframework.stereotype.Service;
+import com.cydeo.dto.UserDTO;
 
 import java.util.List;
 
-@Service
 public interface ProjectService {
 
     ProjectDTO getByProjectCode(String projectCode);
-    List<ProjectDTO> listAllProject();
+
+    List<ProjectDTO> listAllProjects();
+
     void save(ProjectDTO project);
+
     void update(ProjectDTO project);
+
     void delete(String projectCode);
 
-
     void complete(String projectCode);
+
+    List<ProjectDTO> listAllProjectDetails();
+
+    List<ProjectDTO> listAllNonCompletedByAssignedManager(UserDTO assignedManager);
 }

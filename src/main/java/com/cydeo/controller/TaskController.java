@@ -1,6 +1,3 @@
-
-/*
-
 package com.cydeo.controller;
 
 import com.cydeo.dto.TaskDTO;
@@ -31,9 +28,9 @@ public class TaskController {
     @GetMapping("/create")
     public String createTask(Model model) {
         model.addAttribute("task", new TaskDTO());
-        model.addAttribute("employees", userService.findEmployees());
-        model.addAttribute("projects", projectService.findAll());
-        model.addAttribute("tasks", taskService.findAll());
+        model.addAttribute("employees", userService.listAllByRole("employee"));
+        model.addAttribute("projects", projectService.listAllProjects());
+        model.addAttribute("tasks", taskService.listAllTasks());
         return "task/create";
     }
 
@@ -42,9 +39,9 @@ public class TaskController {
 
         if (bindingResult.hasErrors()) {
 
-            model.addAttribute("projects", projectService.findAll());
-            model.addAttribute("employees", userService.findEmployees());
-            model.addAttribute("tasks", taskService.findAll());
+            model.addAttribute("projects", projectService.listAllProjects());
+            model.addAttribute("employees", userService.listAllByRole("employee"));
+            model.addAttribute("tasks", taskService.listAllTasks());
 
             return "task/create";
         }
@@ -58,7 +55,7 @@ public class TaskController {
     @GetMapping("/delete/{id}")
     public String deleteTask(@PathVariable("id") Long id){
 
-        taskService.deleteById(id);
+        taskService.delete(id);
 
         return "redirect:/task/create";
     }
@@ -67,30 +64,21 @@ public class TaskController {
     public String editTask(@PathVariable("id") Long id, Model model){
 
         model.addAttribute("task", taskService.findById(id));
-        model.addAttribute("employees", userService.findEmployees());
-        model.addAttribute("projects", projectService.findAll());
-        model.addAttribute("tasks", taskService.findAll());
+        model.addAttribute("employees", userService.listAllByRole("employee"));
+        model.addAttribute("projects", projectService.listAllProjects());
+        model.addAttribute("tasks", taskService.listAllTasks());
 
         return "task/update";
     }
-
-//    @PostMapping("/update/{taskId}")
-//    public String updateTask(@PathVariable("taskId") Long id, @ModelAttribute("task") TaskDTO task){
-//
-//        task.setId(id);
-//        taskService.update(task);
-//
-//        return "redirect:/task/create";
-//    }
 
     @PostMapping("/update/{id}")
     public String updateTask(@Valid @ModelAttribute("task") TaskDTO task, BindingResult bindingResult, Model model){
 
         if (bindingResult.hasErrors()) {
 
-            model.addAttribute("projects", projectService.findAll());
-            model.addAttribute("employees", userService.findEmployees());
-            model.addAttribute("tasks", taskService.findAll());
+            model.addAttribute("projects", projectService.listAllProjects());
+            model.addAttribute("employees", userService.listAllByRole("employee"));
+            model.addAttribute("tasks", taskService.listAllTasks());
 
             return "task/update";
         }
@@ -103,7 +91,7 @@ public class TaskController {
     @GetMapping("employee/pending-tasks")
     public String employeePendingTasks(Model model){
 
-        model.addAttribute("tasks", taskService.findAllTasksByStatusIsNot(Status.COMPLETE));
+        model.addAttribute("tasks", taskService.listAllTasksByStatusIsNot(Status.COMPLETE));
 
         return "task/pending-tasks";
     }
@@ -111,7 +99,7 @@ public class TaskController {
     @GetMapping("employee/archive")
     public String employeeArchivedTasks(Model model){
 
-        model.addAttribute("tasks", taskService.findAllTasksByStatus(Status.COMPLETE));
+        model.addAttribute("tasks", taskService.listAllTasksByStatus(Status.COMPLETE));
 
         return "task/archive";
     }
@@ -121,7 +109,7 @@ public class TaskController {
 
         model.addAttribute("task", taskService.findById(id));
         model.addAttribute("statuses", Status.values());
-        model.addAttribute("tasks", taskService.findAllTasksByStatusIsNot(Status.COMPLETE));
+        model.addAttribute("tasks", taskService.listAllTasksByStatusIsNot(Status.COMPLETE));
 
         return "task/status-update";
     }
@@ -132,17 +120,15 @@ public class TaskController {
         if (bindingResult.hasErrors()) {
 
             model.addAttribute("statuses", Status.values());
-            model.addAttribute("tasks", taskService.findAllTasksByStatusIsNot(Status.COMPLETE));
+            model.addAttribute("tasks", taskService.listAllTasksByStatusIsNot(Status.COMPLETE));
 
             return "task/status-update";
         }
 
-        taskService.updateStatus(task);
+        taskService.update(task);
 
         return "redirect:/task/employee/pending-tasks";
     }
 
 
 }
-
-*/

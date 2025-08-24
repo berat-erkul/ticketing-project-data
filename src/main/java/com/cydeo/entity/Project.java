@@ -1,4 +1,5 @@
 package com.cydeo.entity;
+
 import com.cydeo.enums.Status;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -13,7 +14,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @Entity
 @Table(name = "projects")
-@Where(clause = "is_deleted = false")
+@Where(clause = "is_deleted=false")
 public class Project extends BaseEntity{
 
     private String projectName;
@@ -35,5 +36,6 @@ public class Project extends BaseEntity{
 
     @Enumerated(EnumType.STRING)
     private Status projectStatus;
+
 
 }

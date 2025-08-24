@@ -1,4 +1,3 @@
-
 package com.cydeo.controller;
 
 import com.cydeo.dto.ProjectDTO;
@@ -26,7 +25,7 @@ public class ProjectController {
     public String createProject(Model model) {
 
         model.addAttribute("project", new ProjectDTO());
-        model.addAttribute("projects", projectService.listAllProject());
+        model.addAttribute("projects", projectService.listAllProjects());
         model.addAttribute("managers", userService.listAllByRole("manager"));
 
         return "project/create";
@@ -39,10 +38,11 @@ public class ProjectController {
         if (bindingResult.hasErrors()) {
 
             model.addAttribute("managers", userService.listAllByRole("manager"));
-            model.addAttribute("projects", projectService.listAllProject());
+            model.addAttribute("projects", projectService.listAllProjects());
 
             return "/project/create";
         }
+
         projectService.save(project);
 
         return "redirect:/project/create";
@@ -52,7 +52,7 @@ public class ProjectController {
     public String editProject(@PathVariable("projectCode") String projectCode, Model model) {
 
         model.addAttribute("project", projectService.getByProjectCode(projectCode));
-        model.addAttribute("projects", projectService.listAllProject());
+        model.addAttribute("projects", projectService.listAllProjects());
         model.addAttribute("managers", userService.listAllByRole("manager"));
 
         return "project/update";
@@ -64,22 +64,26 @@ public class ProjectController {
                                 BindingResult bindingResult, Model model) {
 
         if (bindingResult.hasErrors()) {
+
             model.addAttribute("managers", userService.listAllByRole("manager"));
-            model.addAttribute("projects", projectService.listAllProject());
+            model.addAttribute("projects", projectService.listAllProjects());
+
             return "/project/update";
         }
 
-        projectService.update(project); //here we use update but in service we have "save" method
+        projectService.update(project);
         return "redirect:/project/create";
     }
-
 
 
     @GetMapping("/delete/{projectCode}")
     public String deleteProject(@PathVariable("projectCode") String projectCode) {
+
         projectService.delete(projectCode);
+
         return "redirect:/project/create";
     }
+
 
     @GetMapping("/complete/{projectCode}")
     public String completeProject(@PathVariable("projectCode") String projectCode) {
@@ -88,6 +92,21 @@ public class ProjectController {
 
         return "redirect:/project/create";
     }
+
+    @GetMapping("/manager/project-status")
+    private String getProjectByManager(Model model) {
+
+        model.addAttribute("projects", projectService.listAllProjectDetails());
+
+        return "manager/project-status";
+
+    }
+
+    @GetMapping("/manager/complete/{projectCode}")
+    public String managerCompleteProject(@PathVariable("projectCode") String projectCode) {
+
+        projectService.complete(projectCode);
+
+        return "redirect:/project/manager/project-status";
+    }
 }
-
-
