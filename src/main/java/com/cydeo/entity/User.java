@@ -29,4 +29,17 @@ public class User extends BaseEntity{
     @ManyToOne
     private Role role;
 
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", userName='" + userName + '\'' +
+                ", phone='" + phone + '\'' +
+                ", passWord='" + passWord + '\'' +
+                ", gender=" + gender +
+                ", role=" + role +
+                '}';
+    }
 }

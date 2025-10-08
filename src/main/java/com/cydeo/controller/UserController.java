@@ -1,16 +1,21 @@
 package com.cydeo.controller;
 
+import com.cydeo.dto.ResponseWrapper;
 import com.cydeo.dto.UserDTO;
 import com.cydeo.service.RoleService;
 import com.cydeo.service.UserService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-@Controller
-@RequestMapping("/user")
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/v1/user")
 public class UserController {
 
     private final RoleService roleService;
@@ -21,68 +26,68 @@ public class UserController {
         this.userService = userService;
     }
 
-    @GetMapping("/create")
-    public String createUser(Model model) {
-
-        model.addAttribute("user", new UserDTO());
-        model.addAttribute("roles", roleService.listAllRoles());
-        model.addAttribute("users", userService.listAllUsers());
-
-        return "user/create";
+    // api/v1/user
+    @GetMapping
+    public ResponseEntity<ResponseWrapper> getUsers() {
+        return ResponseEntity.ok(ResponseWrapper.builder()
+                .message("Users are successfully retrieved")
+                .data(userService.listAllUsers())
+                .code(HttpStatus.OK.value())
+                .success(true)
+                .build());
     }
 
-    @PostMapping("/create")
-    public String insertUser(@Valid @ModelAttribute("user") UserDTO user, BindingResult bindingResult, Model model){
-
-        if (bindingResult.hasErrors()){
-
-            model.addAttribute("roles", roleService.listAllRoles());
-            model.addAttribute("users", userService.listAllUsers());
-
-            return "user/create";
-        }
-
-        userService.save(user);
-
-        return "redirect:/user/create";
+    // api/v1/user/{username}
+    @GetMapping("/{username}")
+    public ResponseEntity<ResponseWrapper> getByUserName(@PathVariable("username") String username){
+        return ResponseEntity.ok(ResponseWrapper.builder()
+                .message("User is successfully retrieved")
+                .data(userService.findByUserName(username))
+                .code(HttpStatus.OK.value())
+                .success(true)
+                .build());
     }
 
+    // api/v1/user/create  + body
+   @PostMapping("/create")
+   public ResponseEntity<ResponseWrapper> createUserByBody(@RequestBody UserDTO userDTO){
 
+        userService.save(userDTO); //persist the user
 
-    @GetMapping("/update/{username}")
-    public String editUser(@PathVariable("username") String username, Model model){
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                ResponseWrapper.builder()
+                        .message("User is successfully created")
+                        .data(userDTO)
+                        .code(HttpStatus.CREATED.value())
+                        .success(true)
+                        .build()
+        );
+   }
 
-        model.addAttribute("user", userService.findByUserName(username));
-        model.addAttribute("roles", roleService.listAllRoles());
-        model.addAttribute("users", userService.listAllUsers());
+    // api/v1/user/update  + body
+    @PutMapping("/update")
+    public ResponseEntity<ResponseWrapper> updateUser(@RequestBody UserDTO userDTO){
+        userService.update(userDTO);
 
-        return "user/update";
-    }
-
-    @PostMapping("/update")
-    public String updateUser(@Valid @ModelAttribute("user") UserDTO user, BindingResult bindingResult, Model model){
-
-        if (bindingResult.hasErrors()){
-
-            model.addAttribute("roles", roleService.listAllRoles());
-            model.addAttribute("users", userService.listAllUsers());
-
-            return "user/update";
-        }
-
-       userService.update(user);
-
-        return "redirect:/user/create";
+        return ResponseEntity.status(HttpStatus.OK).body(ResponseWrapper.builder()
+                .message("User is successfully updated")
+                .data(userDTO)
+                .code(HttpStatus.OK.value())
+                .success(true)
+                .build());
     }
 
 
-    @GetMapping("/delete/{username}")
-    public String deleteUser(@PathVariable("username") String username){
+    @DeleteMapping("/delete/{username}")
+    public ResponseEntity<ResponseWrapper> deleteUserByUsername(@PathVariable("username") String username){
 
         userService.delete(username);
 
-        return "redirect:/user/create";
+        return ResponseEntity.status(HttpStatus.OK).body(ResponseWrapper.builder()
+                .message("User is successfully deleted")
+                .success(true)
+                .code(HttpStatus.OK.value())
+                .build());
     }
-
 }
 

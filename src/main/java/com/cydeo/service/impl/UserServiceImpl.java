@@ -32,7 +32,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<UserDTO> listAllUsers() {
-
         List<User> userList = userRepository.findAllByIsDeletedOrderByFirstNameDesc(false);
 
         return userList.stream().map(user -> mapperUtil.convert(user, UserDTO.class)).collect(Collectors.toList());
@@ -40,7 +39,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDTO findByUserName(String username) {
-
         User user = userRepository.findByUserNameAndIsDeleted(username, false);
 
         return mapperUtil.convert(user, UserDTO.class);
@@ -48,7 +46,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void save(UserDTO user) {
-
         userRepository.save(mapperUtil.convert(user, User.class));
     }
 
@@ -68,7 +65,6 @@ public class UserServiceImpl implements UserService {
     public void delete(String username) {
 
         User user = userRepository.findByUserNameAndIsDeleted(username, false);
-
 
         if (checkIfUserCanBeDeleted(mapperUtil.convert(user, UserDTO.class))){
 
@@ -98,13 +94,8 @@ public class UserServiceImpl implements UserService {
             default:
 
                 return true;
-
         }
-
-
-
     }
-
 
 
     @Override
