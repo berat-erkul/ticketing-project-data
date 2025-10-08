@@ -1,5 +1,6 @@
 package com.cydeo.entity;
 
+import com.cydeo.enums.Gender;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
