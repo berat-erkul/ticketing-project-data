@@ -1,6 +1,5 @@
 package com.cydeo.dto;
 
-import com.cydeo.enums.Status;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;

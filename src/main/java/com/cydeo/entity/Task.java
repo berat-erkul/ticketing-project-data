@@ -1,6 +1,5 @@
 package com.cydeo.entity;
 
-import com.cydeo.enums.Status;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
