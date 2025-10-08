@@ -1,5 +1,6 @@
 package com.cydeo.controller;
 
+import com.cydeo.dto.ProjectDTO;
 import com.cydeo.service.ProjectService;
 import com.cydeo.service.UserService;
 import jakarta.validation.Valid;
