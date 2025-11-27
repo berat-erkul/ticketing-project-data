@@ -1,6 +1,9 @@
 package com.cydeo.dto;
 
 import com.cydeo.enums.Gender;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
@@ -10,12 +13,15 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class UserDTO {
 
     // @NotBlank => field should not be null, "" or "  "
     // @NotEmpty => field should not be null, "" or empty collection
     // @NotNull => field should not be null
 
+    @JsonIgnore
     private Long id;
 
     @NotBlank(message = "First Name is a required field")
@@ -39,9 +45,11 @@ public class UserDTO {
     @Pattern(regexp = "(?=.*\\d)(?=.*[a-z])(?=.*[A-Z]).{4,}", message = "The password must be at " +
             "least 4 characters long and include at least 1 uppercase letter, 1 lowercase letter " +
             "and 1 digit")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String passWord;
 
     @NotBlank(message = "Passwords should match")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String confirmPassWord;
 
     @NotNull(message = "Please select a Gender")
@@ -68,6 +76,7 @@ public class UserDTO {
 
             confirmPassWord = null;
         }
+
     }
 
 }

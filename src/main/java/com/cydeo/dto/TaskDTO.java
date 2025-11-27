@@ -1,6 +1,9 @@
 package com.cydeo.dto;
 
 import com.cydeo.enums.Status;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -12,9 +15,15 @@ import java.time.LocalDate;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class TaskDTO {
 
+    @JsonIgnore
     private Long id;
+
+    @NotBlank(message = "Task Code is a required field")
+    private String taskCode;
 
     @NotNull(message = "Please select a Project")
     private ProjectDTO project;

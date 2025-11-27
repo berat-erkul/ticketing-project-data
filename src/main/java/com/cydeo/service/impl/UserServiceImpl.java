@@ -3,13 +3,15 @@ package com.cydeo.service.impl;
 import com.cydeo.dto.ProjectDTO;
 import com.cydeo.dto.TaskDTO;
 import com.cydeo.dto.UserDTO;
+import com.cydeo.entity.Role;
 import com.cydeo.entity.User;
+import com.cydeo.exception.UserAlreadyExistsException;
+import com.cydeo.exception.UserNotFoundException;
 import com.cydeo.mapper.MapperUtil;
 import com.cydeo.repository.UserRepository;
-import com.cydeo.service.ProjectService;
-import com.cydeo.service.TaskService;
-import com.cydeo.service.UserService;
+import com.cydeo.service.*;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,16 +24,23 @@ public class UserServiceImpl implements UserService {
     private final MapperUtil mapperUtil;
     private final ProjectService projectService;
     private final TaskService taskService;
+    private final RoleService roleService;
+    private final KeycloakService keycloakService;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(UserRepository userRepository, MapperUtil mapperUtil, @Lazy ProjectService projectService,@Lazy TaskService taskService) {
+    public UserServiceImpl(UserRepository userRepository, MapperUtil mapperUtil, @Lazy ProjectService projectService, @Lazy TaskService taskService, RoleService roleService, KeycloakService keycloakService, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.mapperUtil = mapperUtil;
         this.projectService = projectService;
         this.taskService = taskService;
+        this.roleService = roleService;
+        this.keycloakService = keycloakService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
     public List<UserDTO> listAllUsers() {
+
         List<User> userList = userRepository.findAllByIsDeletedOrderByFirstNameDesc(false);
 
         return userList.stream().map(user -> mapperUtil.convert(user, UserDTO.class)).collect(Collectors.toList());
@@ -39,24 +48,47 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDTO findByUserName(String username) {
+
         User user = userRepository.findByUserNameAndIsDeleted(username, false);
+
+        if (user == null) throw new UserNotFoundException("User does not exist");
 
         return mapperUtil.convert(user, UserDTO.class);
     }
 
     @Override
     public void save(UserDTO user) {
+
+        if (userRepository.findByUserNameAndIsDeleted(user.getUserName(), false) != null){
+            throw new UserAlreadyExistsException("User already exists");
+        }
+
+        user.setRole(roleService.findByDescription(user.getRole().getDescription()));
+
+        keycloakService.userCreate(user);
+
+        user.setPassWord(passwordEncoder.encode(user.getPassWord()));
+
         userRepository.save(mapperUtil.convert(user, User.class));
     }
 
     @Override
-    public void update(UserDTO user) {
+    public void update(String username, UserDTO user) {
 
-        User foundUser = userRepository.findByUserNameAndIsDeleted(user.getUserName(), false);
+        User foundUser = userRepository.findByUserNameAndIsDeleted(username, false);
 
         User updatedUser = mapperUtil.convert(user, User.class);
 
         updatedUser.setId(foundUser.getId());
+        updatedUser.setUserName(username);
+
+        Role role = mapperUtil.convert(roleService.findByDescription(user.getRole().getDescription()), Role.class);
+
+        updatedUser.setRole(role);
+
+        keycloakService.userUpdate(mapperUtil.convert(updatedUser, UserDTO.class));
+
+        updatedUser.setPassWord(passwordEncoder.encode(user.getPassWord()));
 
         userRepository.save(updatedUser);
     }
@@ -66,18 +98,20 @@ public class UserServiceImpl implements UserService {
 
         User user = userRepository.findByUserNameAndIsDeleted(username, false);
 
-        if (checkIfUserCanBeDeleted(mapperUtil.convert(user, UserDTO.class))){
+
+        if (checkIfUserCanBeDeleted(mapperUtil.convert(user, UserDTO.class))) {
 
             user.setIsDeleted(true);
             user.setUserName(user.getUserName() + "-" + user.getId());
 
+            keycloakService.userDelete(username);
             userRepository.save(user);
         }
     }
 
-    private boolean checkIfUserCanBeDeleted(UserDTO user){
+    private boolean checkIfUserCanBeDeleted(UserDTO user) {
 
-        switch (user.getRole().getDescription()){
+        switch (user.getRole().getDescription()) {
 
             case "Manager":
 
@@ -94,7 +128,10 @@ public class UserServiceImpl implements UserService {
             default:
 
                 return true;
+
         }
+
+
     }
 
 

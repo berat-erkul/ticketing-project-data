@@ -7,6 +7,7 @@ import com.cydeo.entity.User;
 import com.cydeo.enums.Status;
 import com.cydeo.mapper.MapperUtil;
 import com.cydeo.repository.ProjectRepository;
+import com.cydeo.service.KeycloakService;
 import com.cydeo.service.ProjectService;
 import com.cydeo.service.TaskService;
 import com.cydeo.service.UserService;
@@ -23,12 +24,14 @@ public class ProjectServiceImpl implements ProjectService {
     private final MapperUtil mapperUtil;
     private final UserService userService;
     private final TaskService taskService;
+    private final KeycloakService keycloakService;
 
-    public ProjectServiceImpl(ProjectRepository projectRepository, MapperUtil mapperUtil, UserService userService, TaskService taskService) {
+    public ProjectServiceImpl(ProjectRepository projectRepository, MapperUtil mapperUtil, UserService userService, TaskService taskService, KeycloakService keycloakService) {
         this.projectRepository = projectRepository;
         this.mapperUtil = mapperUtil;
         this.userService = userService;
         this.taskService = taskService;
+        this.keycloakService = keycloakService;
     }
 
 
@@ -52,21 +55,28 @@ public class ProjectServiceImpl implements ProjectService {
     public void save(ProjectDTO project) {
 
         project.setProjectStatus(Status.OPEN);
+        project.setAssignedManager(userService.findByUserName(project.getAssignedManager().getUserName()));
         Project convertedProject = mapperUtil.convert(project, Project.class);
         projectRepository.save(convertedProject);
 
     }
 
     @Override
-    public void update(ProjectDTO project) {
+    public void update(String projectCode, ProjectDTO project) {
 
-        Project foundProject = projectRepository.findByProjectCode(project.getProjectCode());
+        Project foundProject = projectRepository.findByProjectCode(projectCode);
 
         Project convertedProject = mapperUtil.convert(project, Project.class);
 
         convertedProject.setId(foundProject.getId());
 
         convertedProject.setProjectStatus(foundProject.getProjectStatus());
+
+        convertedProject.setProjectCode(projectCode);
+
+        User assignedManager = mapperUtil.convert(userService.findByUserName(project.getAssignedManager().getUserName()), User.class);
+
+        convertedProject.setAssignedManager(assignedManager);
 
         projectRepository.save(convertedProject);
 
@@ -101,13 +111,13 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public List<ProjectDTO> listAllProjectDetails() {
 
-        UserDTO currentUser = userService.findByUserName("harold@manager.com");
+        UserDTO currentUser = userService.findByUserName(keycloakService.getLoggedInUserName());
 
         User user = mapperUtil.convert(currentUser, User.class);
 
         List<Project> list = projectRepository.findAllByAssignedManager(user);
 
-       return list.stream().map(project -> {
+        return list.stream().map(project -> {
 
             ProjectDTO dto = mapperUtil.convert(project, ProjectDTO.class);
 

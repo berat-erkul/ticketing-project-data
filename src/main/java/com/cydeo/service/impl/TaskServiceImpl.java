@@ -9,8 +9,11 @@ import com.cydeo.entity.User;
 import com.cydeo.enums.Status;
 import com.cydeo.mapper.MapperUtil;
 import com.cydeo.repository.TaskRepository;
+import com.cydeo.service.KeycloakService;
+import com.cydeo.service.ProjectService;
 import com.cydeo.service.TaskService;
 import com.cydeo.service.UserService;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -24,21 +27,25 @@ public class TaskServiceImpl implements TaskService {
     private final TaskRepository taskRepository;
     private final MapperUtil mapperUtil;
     private final UserService userService;
+    private final ProjectService projectService;
+    private final KeycloakService keycloakService;
 
-    public TaskServiceImpl(TaskRepository taskRepository, MapperUtil mapperUtil, UserService userService) {
+    public TaskServiceImpl(TaskRepository taskRepository, MapperUtil mapperUtil, UserService userService, @Lazy ProjectService projectService, KeycloakService keycloakService) {
         this.taskRepository = taskRepository;
         this.mapperUtil = mapperUtil;
         this.userService = userService;
+        this.projectService = projectService;
+        this.keycloakService = keycloakService;
     }
 
     @Override
     public TaskDTO findById(Long id) {
 
-       Optional<Task> task = taskRepository.findById(id);
+        Optional<Task> task = taskRepository.findById(id);
 
-       if (task.isPresent()){
-           return mapperUtil.convert(task.get(), TaskDTO.class);
-       }
+        if (task.isPresent()) {
+            return mapperUtil.convert(task.get(), TaskDTO.class);
+        }
 
         return null;
     }
@@ -53,6 +60,8 @@ public class TaskServiceImpl implements TaskService {
 
         task.setAssignedDate(LocalDate.now());
         task.setTaskStatus(Status.OPEN);
+        task.setAssignedEmployee(userService.findByUserName(task.getAssignedEmployee().getUserName()));
+        task.setProject(projectService.getByProjectCode(task.getProject().getProjectCode()));
 
         Task convertedTask = mapperUtil.convert(task, Task.class);
 
@@ -61,16 +70,20 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public void update(TaskDTO task) {
+    public void update(String taskCode, TaskDTO task) {
 
-        Optional<Task> foundTask = taskRepository.findById(task.getId());
+        Task foundTask = taskRepository.findByTaskCode(taskCode);
 
         Task convertedTask = mapperUtil.convert(task, Task.class);
 
-        if (foundTask.isPresent()){
+        if (foundTask != null) {
 
-            convertedTask.setAssignedDate(foundTask.get().getAssignedDate());
-            convertedTask.setTaskStatus(task.getTaskStatus() == null ? foundTask.get().getTaskStatus() : task.getTaskStatus());
+            convertedTask.setAssignedDate(foundTask.getAssignedDate());
+            convertedTask.setTaskStatus(task.getTaskStatus() == null ? foundTask.getTaskStatus() : task.getTaskStatus());
+            convertedTask.setTaskCode(taskCode);
+            convertedTask.setId(foundTask.getId());
+            convertedTask.setAssignedEmployee(mapperUtil.convert(userService.findByUserName(task.getAssignedEmployee().getUserName()), User.class));
+            convertedTask.setProject(mapperUtil.convert(projectService.getByProjectCode(task.getProject().getProjectCode()), Project.class));
 
             taskRepository.save(convertedTask);
 
@@ -78,21 +91,21 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public void delete(Long id) {
+    public void delete(String taskCode) {
 
-       Optional<Task> foundTask = taskRepository.findById(id);
+        Task foundTask = taskRepository.findByTaskCode(taskCode);
 
-       if (foundTask.isPresent()){
-           foundTask.get().setIsDeleted(true);
-           taskRepository.save(foundTask.get());
-       }
+        if (foundTask != null) {
+            foundTask.setIsDeleted(true);
+            taskRepository.save(foundTask);
+        }
 
     }
 
     @Override
     public int totalNonCompletedTask(String projectCode) {
 
-      return  taskRepository.totalNonCompletedTasks(projectCode);
+        return taskRepository.totalNonCompletedTasks(projectCode);
 
     }
 
@@ -104,9 +117,9 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public void deleteByProject(ProjectDTO project) {
 
-       List<Task> tasksToDelete = taskRepository.findAllByProject(mapperUtil.convert(project, Project.class));
+        List<Task> tasksToDelete = taskRepository.findAllByProject(mapperUtil.convert(project, Project.class));
 
-       tasksToDelete.forEach(task -> delete(task.getId()));
+        tasksToDelete.forEach(task -> delete(task.getTaskCode()));
     }
 
     @Override
@@ -120,7 +133,7 @@ public class TaskServiceImpl implements TaskService {
 
             taskDTO.setTaskStatus(Status.COMPLETE);
 
-            update(taskDTO);
+            update(taskDTO.getTaskCode(), taskDTO);
 
         });
     }
@@ -128,7 +141,7 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public List<TaskDTO> listAllTasksByStatusIsNot(Status status) {
 
-        UserDTO loggedInUser = userService.findByUserName("john@employee.com");
+        UserDTO loggedInUser = userService.findByUserName(keycloakService.getLoggedInUserName());
 
         List<Task> tasks = taskRepository.findAllByTaskStatusIsNotAndAssignedEmployee(status, mapperUtil.convert(loggedInUser, User.class));
 
@@ -138,7 +151,7 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public List<TaskDTO> listAllTasksByStatus(Status status) {
 
-        UserDTO loggedInUser = userService.findByUserName("john@employee.com");
+        UserDTO loggedInUser = userService.findByUserName(keycloakService.getLoggedInUserName());
 
         List<Task> tasks = taskRepository.findAllByTaskStatusAndAssignedEmployee(status, mapperUtil.convert(loggedInUser, User.class));
 
@@ -148,8 +161,16 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public List<TaskDTO> listAllNonCompletedByAssignedEmployee(UserDTO employee) {
 
-        List<Task> tasks = taskRepository.findAllByTaskStatusIsNotAndAssignedEmployee(Status.COMPLETE,mapperUtil.convert(employee, User.class) );
+        List<Task> tasks = taskRepository.findAllByTaskStatusIsNotAndAssignedEmployee(Status.COMPLETE, mapperUtil.convert(employee, User.class));
 
         return tasks.stream().map(task -> mapperUtil.convert(task, TaskDTO.class)).collect(Collectors.toList());
+    }
+
+    @Override
+    public TaskDTO findByTaskCode(String taskCode) {
+
+        Task task = taskRepository.findByTaskCode(taskCode);
+
+        return mapperUtil.convert(task, TaskDTO.class);
     }
 }

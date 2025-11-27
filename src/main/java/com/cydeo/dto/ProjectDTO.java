@@ -1,6 +1,10 @@
 package com.cydeo.dto;
 
 import com.cydeo.enums.Status;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -13,8 +17,11 @@ import java.time.LocalDate;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ProjectDTO {
 
+    @JsonIgnore
     private Long id;
 
     @NotBlank(message = "Project Name is a required field")
@@ -39,7 +46,10 @@ public class ProjectDTO {
 
     private Status projectStatus;
 
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private int completeTaskCounts;
+
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private int unfinishedTaskCounts;
 
     public ProjectDTO(String projectName, String projectCode, UserDTO assignedManager, LocalDate startDate, LocalDate endDate, String projectDetail, Status projectStatus) {

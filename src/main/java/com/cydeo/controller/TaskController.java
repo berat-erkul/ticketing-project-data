@@ -1,134 +1,106 @@
 package com.cydeo.controller;
 
+import com.cydeo.dto.ResponseWrapper;
 import com.cydeo.dto.TaskDTO;
 import com.cydeo.enums.Status;
-import com.cydeo.service.ProjectService;
 import com.cydeo.service.TaskService;
-import com.cydeo.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@Controller
-@RequestMapping("/task")
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/v1/task")
+@Tag(name = "Task Controller", description = "Task API")
 public class TaskController {
 
-    private final UserService userService;
-    private final ProjectService projectService;
+
     private final TaskService taskService;
 
-    public TaskController(UserService userService, ProjectService projectService, TaskService taskService) {
-        this.userService = userService;
-        this.projectService = projectService;
+
+    public TaskController(TaskService taskService) {
         this.taskService = taskService;
     }
 
-    @GetMapping("/create")
-    public String createTask(Model model) {
-        model.addAttribute("task", new TaskDTO());
-        model.addAttribute("employees", userService.listAllByRole("employee"));
-        model.addAttribute("projects", projectService.listAllProjects());
-        model.addAttribute("tasks", taskService.listAllTasks());
-        return "task/create";
+    @GetMapping
+    @Operation(summary = "Get Tasks")
+    public ResponseEntity<ResponseWrapper> getTasks() {
+
+        List<TaskDTO> taskDTOList = taskService.listAllTasks();
+
+        return ResponseEntity.ok(new ResponseWrapper("Tasks are successfully retrieved", taskDTOList));
+
     }
 
-    @PostMapping("/create")
-    public String insertTask(@Valid @ModelAttribute("task") TaskDTO task, BindingResult bindingResult, Model model) {
+    @GetMapping("/{taskCode}")
+    @Operation(summary = "Get Task By Code")
+    public ResponseEntity<ResponseWrapper> getTaskByTaskCode(@PathVariable("taskCode") String taskCode) {
 
-        if (bindingResult.hasErrors()) {
+        TaskDTO taskDTO = taskService.findByTaskCode(taskCode);
 
-            model.addAttribute("projects", projectService.listAllProjects());
-            model.addAttribute("employees", userService.listAllByRole("employee"));
-            model.addAttribute("tasks", taskService.listAllTasks());
+        return ResponseEntity.ok(new ResponseWrapper("Task is successfully retrieved", taskDTO));
 
-            return "task/create";
-        }
+    }
+
+    @PostMapping
+    @Operation(summary = "Create Task")
+    public ResponseEntity<ResponseWrapper> createTask(@RequestBody @Valid TaskDTO task) {
 
         taskService.save(task);
 
-        return "redirect:/task/create";
+        return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseWrapper("Task is successfully created", 201));
+    }
+
+    @PutMapping("/{taskCode}")
+    @Operation(summary = "Update Task")
+    public ResponseEntity<ResponseWrapper> updateTask(@PathVariable("taskCode") String taskCode, @RequestBody TaskDTO task) {
+
+        taskService.update(taskCode, task);
+
+        return ResponseEntity.ok(new ResponseWrapper("Task is successfully updated"));
+
+    }
+
+    @DeleteMapping("/{taskCode}")
+    @Operation(summary = "Delete Task")
+    public ResponseEntity<ResponseWrapper> deleteTask(@PathVariable("taskCode") String taskCode) {
+
+        taskService.delete(taskCode);
+
+        return ResponseEntity.ok(new ResponseWrapper("Task is successfully deleted"));
+    }
+
+    @GetMapping("/employee/pending-tasks")
+    @Operation(summary = "Get Pending Tasks")
+    public ResponseEntity<ResponseWrapper> employeePendingTasks() {
+
+        List<TaskDTO> taskDTOList = taskService.listAllTasksByStatusIsNot(Status.COMPLETE);
+
+        return ResponseEntity.ok(new ResponseWrapper("Tasks are successfully retrieved", taskDTOList));
+    }
+
+    @GetMapping("/employee/archive")
+    @Operation(summary = "Get Archived Tasks")
+    public ResponseEntity<ResponseWrapper> employeeArchivedTasks() {
+
+        List<TaskDTO> taskDTOList = taskService.listAllTasksByStatus(Status.COMPLETE);
+
+        return ResponseEntity.ok(new ResponseWrapper("Tasks are successfully retrieved", taskDTOList));
     }
 
 
-    @GetMapping("/delete/{id}")
-    public String deleteTask(@PathVariable("id") Long id){
+    @PutMapping("/employee/update/{taskCode}")
+    @Operation(summary = "Employee Update Task")
+    public ResponseEntity<ResponseWrapper> employeeUpdateTask(@PathVariable("taskCode") String taskCode, @RequestBody TaskDTO task) {
 
-        taskService.delete(id);
+        taskService.update(taskCode, task);
 
-        return "redirect:/task/create";
+        return ResponseEntity.ok(new ResponseWrapper("Task is successfully updated"));
+
     }
-
-    @GetMapping("/update/{id}")
-    public String editTask(@PathVariable("id") Long id, Model model){
-
-        model.addAttribute("task", taskService.findById(id));
-        model.addAttribute("employees", userService.listAllByRole("employee"));
-        model.addAttribute("projects", projectService.listAllProjects());
-        model.addAttribute("tasks", taskService.listAllTasks());
-
-        return "task/update";
-    }
-
-    @PostMapping("/update/{id}")
-    public String updateTask(@Valid @ModelAttribute("task") TaskDTO task, BindingResult bindingResult, Model model){
-
-        if (bindingResult.hasErrors()) {
-
-            model.addAttribute("projects", projectService.listAllProjects());
-            model.addAttribute("employees", userService.listAllByRole("employee"));
-            model.addAttribute("tasks", taskService.listAllTasks());
-
-            return "task/update";
-        }
-
-        taskService.update(task);
-
-        return "redirect:/task/create";
-    }
-
-    @GetMapping("employee/pending-tasks")
-    public String employeePendingTasks(Model model){
-
-        model.addAttribute("tasks", taskService.listAllTasksByStatusIsNot(Status.COMPLETE));
-
-        return "task/pending-tasks";
-    }
-
-    @GetMapping("employee/archive")
-    public String employeeArchivedTasks(Model model){
-
-        model.addAttribute("tasks", taskService.listAllTasksByStatus(Status.COMPLETE));
-
-        return "task/archive";
-    }
-
-    @GetMapping("employee/edit/{id}")
-    public String employeeEditTask(@PathVariable("id") Long id, Model model){
-
-        model.addAttribute("task", taskService.findById(id));
-        model.addAttribute("statuses", Status.values());
-        model.addAttribute("tasks", taskService.listAllTasksByStatusIsNot(Status.COMPLETE));
-
-        return "task/status-update";
-    }
-
-    @PostMapping("/employee/update/{id}")
-    public String employeeUpdateTask(@Valid @ModelAttribute("task") TaskDTO task, BindingResult bindingResult, Model model){
-
-        if (bindingResult.hasErrors()) {
-
-            model.addAttribute("statuses", Status.values());
-            model.addAttribute("tasks", taskService.listAllTasksByStatusIsNot(Status.COMPLETE));
-
-            return "task/status-update";
-        }
-
-        taskService.update(task);
-
-        return "redirect:/task/employee/pending-tasks";
-    }
-
 
 }

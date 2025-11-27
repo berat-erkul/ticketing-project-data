@@ -1,93 +1,88 @@
 package com.cydeo.controller;
 
+import com.cydeo.annotation.ExecutionTime;
 import com.cydeo.dto.ResponseWrapper;
 import com.cydeo.dto.UserDTO;
-import com.cydeo.service.RoleService;
 import com.cydeo.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/user")
+@Tag(name = "User Controller", description = "User API")
 public class UserController {
 
-    private final RoleService roleService;
     private final UserService userService;
 
-    public UserController(RoleService roleService, UserService userService) {
-        this.roleService = roleService;
+
+    public UserController(UserService userService) {
         this.userService = userService;
     }
 
-    // api/v1/user
+    @ExecutionTime
     @GetMapping
+    @Operation(summary = "Get Users")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Users are successfully retrieved",
+                    content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "409", description = "Users could not be retrieved",
+                    content = @Content(mediaType = "application/json"))
+    })
+//    @Tag(name = "Get Methods")
     public ResponseEntity<ResponseWrapper> getUsers() {
-        return ResponseEntity.ok(ResponseWrapper.builder()
-                .message("Users are successfully retrieved")
-                .data(userService.listAllUsers())
-                .code(HttpStatus.OK.value())
-                .success(true)
-                .build());
+
+        List<UserDTO> userDTOList = userService.listAllUsers();
+
+        return ResponseEntity.ok(new ResponseWrapper("Users are successfully retrieved", userDTOList));
+
     }
 
-    // api/v1/user/{username}
     @GetMapping("/{username}")
-    public ResponseEntity<ResponseWrapper> getByUserName(@PathVariable("username") String username){
-        return ResponseEntity.ok(ResponseWrapper.builder()
-                .message("User is successfully retrieved")
-                .data(userService.findByUserName(username))
-                .code(HttpStatus.OK.value())
-                .success(true)
-                .build());
+    @Operation(summary = "Get User by Username")
+    public ResponseEntity<ResponseWrapper> getUserByUserName(@PathVariable("username") String username) {
+
+        UserDTO userDTO = userService.findByUserName(username);
+
+        return ResponseEntity.ok(new ResponseWrapper("User is successfully retrieved", userDTO));
+
+
     }
 
-    // api/v1/user/create  + body
-   @PostMapping("/create")
-   public ResponseEntity<ResponseWrapper> createUserByBody(@RequestBody UserDTO userDTO){
+    @PostMapping
+    @Operation(summary = "Create User")
+    public ResponseEntity<ResponseWrapper> createUser(@RequestBody @Valid UserDTO user) {
 
-        userService.save(userDTO); //persist the user
+        userService.save(user);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(
-                ResponseWrapper.builder()
-                        .message("User is successfully created")
-                        .data(userDTO)
-                        .code(HttpStatus.CREATED.value())
-                        .success(true)
-                        .build()
-        );
-   }
-
-    // api/v1/user/update  + body
-    @PutMapping("/update")
-    public ResponseEntity<ResponseWrapper> updateUser(@RequestBody UserDTO userDTO){
-        userService.update(userDTO);
-
-        return ResponseEntity.status(HttpStatus.OK).body(ResponseWrapper.builder()
-                .message("User is successfully updated")
-                .data(userDTO)
-                .code(HttpStatus.OK.value())
-                .success(true)
-                .build());
+        return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseWrapper("User is successfully created", 201));
     }
 
 
-    @DeleteMapping("/delete/{username}")
-    public ResponseEntity<ResponseWrapper> deleteUserByUsername(@PathVariable("username") String username){
+    @PutMapping("/{username}")
+    @Operation(summary = "Update User")
+    public ResponseEntity<ResponseWrapper> updateUser(@PathVariable("username") String username, @RequestBody UserDTO user) {
+
+        userService.update(username, user);
+
+        return ResponseEntity.ok(new ResponseWrapper("User is successfully updated"));
+    }
+
+    @DeleteMapping("/{username}")
+    @Operation(summary = "Delete User")
+    public ResponseEntity<ResponseWrapper> deleteUser(@PathVariable("username") String username) {
 
         userService.delete(username);
 
-        return ResponseEntity.status(HttpStatus.OK).body(ResponseWrapper.builder()
-                .message("User is successfully deleted")
-                .success(true)
-                .code(HttpStatus.OK.value())
-                .build());
+        return ResponseEntity.ok(new ResponseWrapper("User is successfully deleted"));
+
     }
 }
-

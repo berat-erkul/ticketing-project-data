@@ -15,9 +15,9 @@ public interface TaskService {
 
     void save(TaskDTO task);
 
-    void update(TaskDTO task);
+    void update(String taskCode, TaskDTO task);
 
-    void delete(Long id);
+    void delete(String taskCode);
 
     int totalNonCompletedTask(String projectCode);
 
@@ -32,4 +32,7 @@ public interface TaskService {
     List<TaskDTO> listAllTasksByStatus(Status status);
 
     List<TaskDTO> listAllNonCompletedByAssignedEmployee(UserDTO employee);
+
+    TaskDTO findByTaskCode(String taskCode);
+
 }
